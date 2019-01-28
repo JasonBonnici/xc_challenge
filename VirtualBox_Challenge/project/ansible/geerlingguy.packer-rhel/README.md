@@ -6,6 +6,12 @@ This role configures RHEL/CentOS (either minimal or full install) in preparation
 
 The role may be made more flexible in the future, so it could work with other Linux flavors and/or other Packer builders besides VirtualBox, but I'm currently only focused on VirtualBox, since the main use case right now is developer VMs.
 
+## Changes from Original code
+
+**tasks/main.yml**
+
+Install Nginx and prepare webserver to serve contents for 2 different domains as set in the root main.yml.
+
 ## Requirements
 
 Prior to running this role via Packer, you need to make sure Ansible is installed via a shell provisioner, and that preliminary VM configuration (like adding a vagrant user to the appropriate group and the sudoers file) is complete, generally by using a Kickstart installation file (e.g. `ks.cfg`) with Packer. An example array of provisioners for your Packer .json template would be something like:
