@@ -37,6 +37,7 @@ Example:
 Using Consul template generate a file ‘/root/domains’ for each domain
 
 Example:
+
 	#domain name
 	#domain name
 
