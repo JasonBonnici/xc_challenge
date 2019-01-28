@@ -8,9 +8,9 @@ Some parts of the code are not my own, yet I have modified as required but didn'
 
 ----
 
-Challenge details;
+***Challenge details***
 
-***Task 1***
+## Task 1
 
 Use VirtualBox or VMWare to create a Consul cluster with 2 nodes.
 
@@ -58,14 +58,14 @@ Use both folders 'domains' and 'whitelist' - where 'domains' should provide list
 that will be used when querying 'whitelist' for the actual IP address. Also, create a Consul
 template file.
 
-##Deliverables:
+## Deliverables:
 
 	Consul template file
 	Consul configs
 
 ----
 
-***Task 2***
+## Task 2
 
 Use any of the tools below to build a VirtualBox image which contains configuration of Nginx running with 2 virtual hosts.
 
