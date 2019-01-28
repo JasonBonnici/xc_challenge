@@ -1,0 +1,8 @@
+server {
+   listen 80;
+   listen [::]:80;
+   server_name www.{{ vhost_domain2 }} {{ vhost_domain2 }};
+   root /var/www/{{ vhost_domain2 }}/;
+   access_log /var/log/nginx/{{ vhost_domain2 }}.access.log;
+   error_log /var/log/nginx/{{ vhost_domain2 }}.error.log;
+}

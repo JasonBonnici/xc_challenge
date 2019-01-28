@@ -1,0 +1,29 @@
+{
+    "advertise_addr": "10.1.182.117",
+    "bind_addr": "10.1.182.117",
+    "bootstrap_expect": 2,
+    "client_addr": "0.0.0.0",
+    "datacenter": "Luqa",
+    "data_dir": "/var/lib/consul",
+    "domain": "finlab",
+    "enable_script_checks": true,
+    "dns_config": {
+        "enable_truncate": true,
+        "only_passing": true
+    },
+    "enable_syslog": true,
+    "encrypt": "6cLOJXCgls0EiBKu0kfbfQ==",
+    "leave_on_terminate": true,
+    "log_level": "INFO",
+    "rejoin_after_leave": true,
+    "retry_join": [
+        "ubnt_vm01",
+        "ubnt_vm02"
+    ],
+    "server": true,
+    "start_join": [
+        "ubnt_vm01",
+        "ubnt_vm02"
+    ],
+    "ui": true
+}

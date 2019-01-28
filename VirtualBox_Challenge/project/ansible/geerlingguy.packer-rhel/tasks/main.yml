@@ -1,0 +1,163 @@
+---
+- name: Get the current kernel release.
+  command: uname -r
+  changed_when: false
+  register: kernel_release
+
+- name: Ensure necessary packages are installed.
+  yum: "name={{ item }} state=present"
+  with_items:
+    - wget
+    - perl
+    - cpp
+    - gcc
+    - make
+    - bzip2
+    - nginx
+    - kernel-headers
+    - kernel-devel
+    - "kernel-devel-{{ kernel_release.stdout }}"
+    - libselinux-python
+    - cifs-utils
+
+# Fix slow DNS.
+- name: Fix slow DNS (adapted from Bento).
+  lineinfile:
+    dest: /etc/sysconfig/network
+    regexp: '^RES_OPTIONS'
+    line: 'RES_OPTIONS="single-request-reopen"'
+    state: present
+
+- name: Restart network service (explicitly).
+  service: name=network state=restarted
+
+# SSH daemon configuration.
+- name: Configure SSH daemon.
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: present
+  with_items:
+    - { regexp: '^UseDNS', line: 'UseDNS no' }
+    - { regexp: '^GSSAPIAuthentication', line: 'GSSAPIAuthentication no' }
+
+# Vagrant SSH configuration.
+- name: Create a login user
+  user:
+   name: vagrant
+   password: 'vagrant'
+   state: present
+   shell: /bin/bash
+   system: no
+   createhome: yes
+   home: /home/vagrant
+
+# Vagrant SSH configuration.
+- name: Configure Vagrant .ssh directory.
+  file:
+    path: /home/vagrant/.ssh
+    state: directory
+    owner: vagrant
+    group: vagrant
+    mode: 0700
+
+- name: Get Vagrant's public key.
+  get_url:
+    url: https://github.com/mitchellh/vagrant/raw/master/keys/vagrant.pub
+    dest: /home/vagrant/.ssh/authorized_keys
+    owner: vagrant
+    group: vagrant
+    mode: 0600
+
+# VirtualBox tools installation.
+- name: Check if VirtualBox is running the guest VM.
+  stat: path=/home/vagrant/.vbox_version
+  register: virtualbox_check
+
+- include_tasks: virtualbox.yml
+  when: virtualbox_check.stat.exists
+
+# VMware tools installation.
+- name: Check if VMWare is running the guest VM.
+  shell: "cat /proc/scsi/scsi | grep VMware"
+  changed_when: false
+  failed_when: false
+  register: vmware_check
+
+- include_tasks: vmware.yml
+  when: vmware_check.rc == 0
+
+# Start Nginx Conf
+- name: Create root dir for app01-vm-prd.mt.local
+  file:
+    path: /var/www/{{ vhost_domain }}
+    owner: vagrant
+    group: nginx
+    mode: 0755
+    state: directory
+
+- name: Create root dir for app02-vm-prd.mt.local
+  file:
+    path: /var/www/{{ vhost_domain2 }}
+    owner: vagrant
+    group: nginx
+    mode: 0755
+    state: directory
+
+- name: Nginx app01-vm-prd.mt.local vhosts
+  template:
+    src: "templates/vhost.conf.j2"
+    dest: "/etc/nginx/conf.d/{{ vhost_domain }}.conf"
+
+- name: Nginx app01-vm-prd.mt.local populate index
+  template:
+    src: "templates/index.html"
+    dest: "/var/www/{{ vhost_domain }}/index.html"
+
+- name: Nginx app02-vm-prd.mt.local vhosts
+  template:
+    src: "templates/vhost2.conf.j2"
+    dest: "/etc/nginx/conf.d/{{ vhost_domain2 }}.conf"
+
+- name: Nginx app02-vm-prd.mt.local populate index
+  template:
+    src: "templates/index.html"
+    dest: "/var/www/{{ vhost_domain2 }}/index.html"
+
+- name: Reload service nginx, in all cases
+  service:
+    name: nginx
+    state: reloaded
+
+- name: Enable service nginx, and not touch the state
+  service:
+    name: nginx
+    enabled: yes
+
+
+# Cleanup tasks.
+- name: Remove unneeded packages.
+  yum: "name={{ item }} state=absent"
+  with_items:
+    - cpp
+    - kernel-devel
+    - kernel-headers
+
+- name: Clean up yum.
+  command: yum clean all
+
+- name: Remove any remnants of VirtualBox ISOs.
+  shell: rm -rf VBoxGuestAdditions_*.iso VBoxGuestAdditions_*.iso.?
+
+- name: Remove RedHat interface persistence (step 1).
+  shell: rm -f /etc/udev/rules.d/70-persistent-net.rules
+
+- name: Remove RedHat interface persistence (step 2).
+  lineinfile:
+    dest: /etc/sysconfig/network-scripts/ifcfg-eth0
+    regexp: "{{ item }}"
+    state: absent
+  with_items:
+    - '^HWADDR'
+    - '^UUID'

@@ -1,0 +1,9 @@
+---
+- hosts: all
+  vars:
+    vhost_domain: "app01-vm-prd.mt.local"
+    vhost_domain2: "app02-vm-prd.mt.local"
+  sudo: yes
+  gather_facts: yes
+  roles:
+    - geerlingguy.packer-rhel
